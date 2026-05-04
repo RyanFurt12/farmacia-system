@@ -37,33 +37,33 @@ cd farmacia-app && mvn spring-boot:run
 
 ## API Endpoints
 
-### Clients — `/api/clients`
-| Method | Endpoint | Description |
+### Clientes — `/api/clients`
+| Método | Endpoint | Descrição |
 |--------|----------|-------------|
-| POST | `/api/clients` | Register client |
-| PUT | `/api/clients/cpf/{cpf}` | Update client info |
-| GET | `/api/clients` | List all |
-| GET | `/api/clients/{id}` | Find by ID |
-| GET | `/api/clients/cpf/{cpf}` | Find by CPF |
+| POST | `/api/clients` | Registrar Cliente |
+| PUT | `/api/clients/cpf/{cpf}` | Atualizar dados de cliente |
+| GET | `/api/clients` | Listar Clientes |
+| GET | `/api/clients/{id}` | Buscar Cliente por ID |
+| GET | `/api/clients/cpf/{cpf}` | Buscar Cliente por CPF |
 
-### Products & Supplier Orders — `/api/products`
-| Method | Endpoint | Description |
+### Produtos — `/api/products`
+| Método | Endpoint | Descrição |
 |--------|----------|-------------|
-| POST | `/api/products` | Register product |
-| GET | `/api/products` | List all |
-| GET | `/api/products/{id}` | Find by ID |
-| POST | `/api/products/{id}/order?quantity=5` | Order product from a supplier |
+| POST | `/api/products` | Registrar Produto |
+| GET | `/api/products` | Listar Produtos |
+| GET | `/api/products/{id}` | Buscar Produto por ID |
+| POST | `/api/products/{id}/order?quantity=5` | Repor Estoque de um Produto |
 
-### Sales — `/api/sales`
-| Method | Endpoint | Description |
+### Vendas — `/api/sales`
+| Método | Endpoint | Descrição |
 |--------|----------|-------------|
-| POST | `/api/sales` | Register sale |
-| GET | `/api/sales` | List all |
-| GET | `/api/sales/{id}` | Find by ID |
+| POST | `/api/sales` | Registrar Venda |
+| GET | `/api/sales` | Listar Vendas |
+| GET | `/api/sales/{id}` | Buscar Venda por ID |
 
 ## Exemplos de uso
 
-### Register or Update Client
+### Registrar e Atualizar Cliente
 ```bash
 # Register
 curl -X POST http://localhost:8080/api/clients \
@@ -76,12 +76,7 @@ curl -X PUT http://localhost:8080/api/clients/cpf/52998224725 \
   -d '{"name": "Teste Update", "email": "teste.update@email.com"}'
 ```
 
-### Order from Supplier
-```bash
-curl -X POST "http://localhost:8080/api/products/1/order?quantity=10"
-```
-
-### Register Sale
+### Registrar Venda
 ```bash
 curl -X POST http://localhost:8080/api/sales \
   -H "Content-Type: application/json" \
@@ -93,4 +88,9 @@ curl -X POST http://localhost:8080/api/sales \
     ],
     "prescriptionId": "REC-12345"
   }'
+```
+
+### Repor Estoque de produto
+```bash
+curl -X POST "http://localhost:8080/api/products/1/order?quantity=10"
 ```
