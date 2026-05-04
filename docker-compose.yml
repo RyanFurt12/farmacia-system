@@ -1,0 +1,40 @@
+services:
+  fornecedor-a:
+    build:
+      context: .
+      dockerfile: ./fornecedor-a-service/Dockerfile
+    container_name: fornecedor-a
+    ports:
+      - "8083:8083"
+    networks:
+      - farmacia-network
+
+  fornecedor-b:
+    build:
+      context: .
+      dockerfile: ./fornecedor-b-service/Dockerfile
+    container_name: fornecedor-b
+    ports:
+      - "8084:8084"
+    networks:
+      - farmacia-network
+
+  farmacia-app:
+    build:
+      context: .
+      dockerfile: ./farmacia-app/Dockerfile
+    container_name: farmacia-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - fornecedor-a
+      - fornecedor-b
+    environment:
+      FORNECEDOR_A_URL: http://fornecedor-a:8083
+      FORNECEDOR_B_URL: http://fornecedor-b:8084
+    networks:
+      - farmacia-network
+
+networks:
+  farmacia-network:
+    driver: bridge
