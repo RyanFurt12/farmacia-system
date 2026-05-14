@@ -26,3 +26,21 @@ INSERT INTO products (name, barcode, price, controlled, stock, supplier) VALUES
 
 INSERT INTO products (name, barcode, price, controlled, stock, supplier) VALUES
 ('Amoxicilina 500mg', '7891234560005', 28.50, false, 300, 'FORNECEDOR_B');
+
+
+-- =============================================
+-- Purchase intentions seed data
+-- =============================================
+
+INSERT INTO purchase_intentions (product_id, quantity, status, created_at) VALUES
+(1, 200, 'PENDING', '2024-05-01 10:00:00');
+
+INSERT INTO purchase_intentions (product_id, quantity, status, created_at, reviewed_at) VALUES
+(2, 50, 'APPROVED', '2024-05-01 11:00:00', '2024-05-01 14:00:00');
+
+INSERT INTO purchase_intentions (product_id, quantity, status, created_at, reviewed_at) VALUES
+(3, 300, 'APPROVED', '2024-05-02 09:00:00', '2024-05-02 10:30:00');
+
+INSERT INTO purchase_intentions (product_id, quantity, status, created_at, reviewed_at) VALUES
+(4, 100, 'REJECTED', '2024-05-02 14:00:00', '2024-05-02 16:00:00');
+

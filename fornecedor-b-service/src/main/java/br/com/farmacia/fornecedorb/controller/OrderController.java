@@ -1,5 +1,7 @@
 package br.com.farmacia.fornecedorb.controller;
 
+import br.com.farmacia.dto.BulkOrderRequest;
+import br.com.farmacia.dto.BulkOrderResponse;
 import br.com.farmacia.dto.OrderRequest;
 import br.com.farmacia.dto.OrderResponse;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,25 @@ public class OrderController {
 
         OrderResponse response = parseSoapResponse(soapSuccessResponse);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<BulkOrderResponse> receiveBulkOrder(@RequestBody BulkOrderRequest request) {
+        if (random.nextInt(100) < 15) {
+            String soapErrorResponse = buildSoapErrorResponse();
+            OrderResponse errorParsed = parseSoapResponse(soapErrorResponse);
+            return ResponseEntity.ok(
+                    new BulkOrderResponse(null, "ERRO", errorParsed.getMessage(), request.getItems().size())
+            );
+        }
+
+        String protocol = "FB-BULK-" + UUID.randomUUID().toString();
+        String soapSuccessResponse = buildSoapSuccessResponse(protocol);
+        parseSoapResponse(soapSuccessResponse);
+
+        return ResponseEntity.ok(
+                new BulkOrderResponse(protocol, "SUCESSO", "Pedido em lote aceito via SOAP", request.getItems().size())
+        );
     }
 
     @GetMapping("/health")

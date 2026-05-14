@@ -1,5 +1,7 @@
 package br.com.farmacia.fornecedora.controller;
 
+import br.com.farmacia.dto.BulkOrderRequest;
+import br.com.farmacia.dto.BulkOrderResponse;
 import br.com.farmacia.dto.OrderRequest;
 import br.com.farmacia.dto.OrderResponse;
 import org.slf4j.Logger;
@@ -33,6 +35,27 @@ public class OrderController {
 
         return ResponseEntity.ok(
                 new OrderResponse(protocol, "SUCESSO", "Pedido aceito")
+        );
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<BulkOrderResponse> receiveBulkOrder(@RequestBody BulkOrderRequest request) {
+        log.info("[FORNECEDOR-A] Recebendo pedido em lote com {} itens", request.getItems().size());
+
+        for (OrderRequest item : request.getItems()) {
+            String orderId = UUID.randomUUID().toString().substring(0, 8);
+            writeToFile(orderId, item, "LOTE");
+        }
+
+        if (random.nextInt(100) < 15) {
+            return ResponseEntity.ok(
+                    new BulkOrderResponse(null, "ERRO", "COBOL-ERR: Falha no processamento em lote", request.getItems().size())
+            );
+        }
+
+        String protocol = "FA-BULK-" + UUID.randomUUID().toString();
+        return ResponseEntity.ok(
+                new BulkOrderResponse(protocol, "SUCESSO", "Pedido em lote aceito", request.getItems().size())
         );
     }
 
