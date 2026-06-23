@@ -1,6 +1,5 @@
-package br.com.farmacia.model;
+package br.com.produtos.model;
 
-import br.com.farmacia.model.utils.PurchaseIntentionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

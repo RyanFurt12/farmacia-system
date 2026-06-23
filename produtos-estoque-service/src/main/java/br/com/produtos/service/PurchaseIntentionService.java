@@ -1,15 +1,15 @@
-package br.com.farmacia.service;
+package br.com.produtos.service;
 
 import br.com.farmacia.dto.BulkOrderRequest;
 import br.com.farmacia.dto.BulkOrderResponse;
 import br.com.farmacia.dto.OrderRequest;
-import br.com.farmacia.integration.fornecedor.SupplierPort;
-import br.com.farmacia.model.Product;
-import br.com.farmacia.model.PurchaseIntention;
-import br.com.farmacia.model.SupplierType;
-import br.com.farmacia.model.utils.PurchaseIntentionStatus;
-import br.com.farmacia.repository.PurchaseIntentionRepository;
-import br.com.farmacia.repository.ProductRepository;
+import br.com.produtos.integration.fornecedor.SupplierPort;
+import br.com.produtos.model.Product;
+import br.com.produtos.model.PurchaseIntention;
+import br.com.produtos.model.PurchaseIntentionStatus;
+import br.com.produtos.model.SupplierType;
+import br.com.produtos.repository.ProductRepository;
+import br.com.produtos.repository.PurchaseIntentionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +96,6 @@ public class PurchaseIntentionService {
             return new BulkPurchaseSummary(0, 0, 0, List.of());
         }
 
-        // Group intentions by supplier
         Map<SupplierType, List<PurchaseIntention>> groupedBySupplier = approvedIntentions.stream()
                 .collect(Collectors.groupingBy(i -> i.getProduct().getSupplier()));
 
@@ -113,7 +112,6 @@ public class PurchaseIntentionService {
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("Nenhum adaptador encontrado para o fornecedor: " + supplierType));
 
-            // Build bulk order request with all items for this supplier
             List<OrderRequest> orderItems = intentions.stream()
                     .map(i -> new OrderRequest(i.getProduct().getId(), i.getProduct().getName(), i.getQuantity()))
                     .toList();
@@ -124,7 +122,6 @@ public class PurchaseIntentionService {
             BulkOrderResponse response = supplierPort.sendBulkOrder(bulkOrderRequest);
 
             if ("SUCESSO".equals(response.getStatus())) {
-                // Update stock and mark as ordered
                 LocalDateTime now = LocalDateTime.now();
                 for (PurchaseIntention intention : intentions) {
                     Product product = intention.getProduct();
@@ -139,7 +136,6 @@ public class PurchaseIntentionService {
                 totalSuccess += intentions.size();
                 supplierResults.add(new SupplierResult(supplierType.name(), response.getProtocol(), "SUCESSO", null, intentions.size()));
             } else {
-                // Failure — intentions remain APPROVED for retry
                 totalFailed += intentions.size();
                 supplierResults.add(new SupplierResult(supplierType.name(), null, "ERRO", response.getMessage(), intentions.size()));
                 log.error("Falha no pedido em lote para {}: {}", supplierType, response.getMessage());
@@ -156,8 +152,6 @@ public class PurchaseIntentionService {
                             action, intention.getStatus(), expectedStatus));
         }
     }
-
-    // Inner classes for bulk purchase response
 
     public record SupplierResult(
             String supplier,

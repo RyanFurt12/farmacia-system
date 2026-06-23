@@ -1,4 +1,28 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: farmacia-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - farmacia-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: farmacia-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - farmacia-network
+
   fornecedor-a:
     build:
       context: .
@@ -19,6 +43,31 @@ services:
     networks:
       - farmacia-network
 
+  produtos-estoque-service:
+    build:
+      context: .
+      dockerfile: ./produtos-estoque-service/Dockerfile
+    container_name: produtos-estoque-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      fornecedor-a:
+        condition: service_started
+      fornecedor-b:
+        condition: service_started
+    environment:
+      MYSQL_HOST: mysql
+      RABBITMQ_HOST: rabbitmq
+      FORNECEDOR_A_URL: http://fornecedor-a:8083
+      FORNECEDOR_B_URL: http://fornecedor-b:8084
+      ESTOQUE_MODE: ${ESTOQUE_MODE:-rest}
+    networks:
+      - farmacia-network
+
   farmacia-app:
     build:
       context: .
@@ -27,11 +76,17 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - fornecedor-a
-      - fornecedor-b
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      produtos-estoque-service:
+        condition: service_started
     environment:
-      FORNECEDOR_A_URL: http://fornecedor-a:8083
-      FORNECEDOR_B_URL: http://fornecedor-b:8084
+      MYSQL_HOST: mysql
+      RABBITMQ_HOST: rabbitmq
+      PRODUTOS_SERVICE_URL: http://produtos-estoque-service:8082
+      ESTOQUE_MODE: ${ESTOQUE_MODE:-rest}
     networks:
       - farmacia-network
 

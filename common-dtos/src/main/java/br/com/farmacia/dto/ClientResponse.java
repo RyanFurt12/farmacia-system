@@ -9,16 +9,21 @@ public class ClientResponse {
     private String name;
     private String email;
     private String phone;
+    private LocalDate birthDate;
+    private Boolean hasInsurance;
     private LocalDate registrationDate;
 
     public ClientResponse() {}
 
-    public ClientResponse(Long id, String cpf, String name, String email, String phone, LocalDate registrationDate) {
+    public ClientResponse(Long id, String cpf, String name, String email, String phone,
+                          LocalDate birthDate, Boolean hasInsurance, LocalDate registrationDate) {
         this.id = id;
         this.cpf = cpf;
         this.name = name;
         this.email = email;
         this.phone = phone;
+        this.birthDate = birthDate;
+        this.hasInsurance = hasInsurance;
         this.registrationDate = registrationDate;
     }
 
@@ -36,6 +41,12 @@ public class ClientResponse {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+
+    public Boolean getHasInsurance() { return hasInsurance; }
+    public void setHasInsurance(Boolean hasInsurance) { this.hasInsurance = hasInsurance; }
 
     public LocalDate getRegistrationDate() { return registrationDate; }
     public void setRegistrationDate(LocalDate registrationDate) { this.registrationDate = registrationDate; }

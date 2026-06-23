@@ -1,4 +1,4 @@
-package br.com.farmacia.model;
+package br.com.produtos.model;
 
 import jakarta.persistence.*;
 import lombok.*;

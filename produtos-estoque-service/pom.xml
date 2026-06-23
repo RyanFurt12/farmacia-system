@@ -12,12 +12,12 @@
     </parent>
 
     <groupId>br.com.farmacia</groupId>
-    <artifactId>farmacia-app</artifactId>
+    <artifactId>produtos-estoque-service</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Farmácia App</name>
-    <description>Sistema principal da rede de farmácias</description>
+    <name>Produtos e Estoque Service</name>
+    <description>Microsserviço de produtos, estoque e compras/reposição</description>
 
     <properties>
         <java.version>21</java.version>
@@ -54,12 +54,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>br.com.farmacia</groupId>
-            <artifactId>cpf-validator</artifactId>
-            <version>1.0.0</version>
         </dependency>
 
         <dependency>

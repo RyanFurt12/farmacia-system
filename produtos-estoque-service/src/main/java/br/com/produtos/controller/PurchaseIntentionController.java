@@ -1,8 +1,8 @@
-package br.com.farmacia.controller;
+package br.com.produtos.controller;
 
-import br.com.farmacia.model.PurchaseIntention;
-import br.com.farmacia.model.utils.PurchaseIntentionStatus;
-import br.com.farmacia.service.PurchaseIntentionService;
+import br.com.produtos.model.PurchaseIntention;
+import br.com.produtos.model.PurchaseIntentionStatus;
+import br.com.produtos.service.PurchaseIntentionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

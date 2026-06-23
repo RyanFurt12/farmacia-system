@@ -20,9 +20,9 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final CpfValidator cpfValidator;
 
-    public ClientService(ClientRepository clientRepository) {
+    public ClientService(ClientRepository clientRepository, CpfValidator cpfValidator) {
         this.clientRepository = clientRepository;
-        this.cpfValidator = new CpfValidator();
+        this.cpfValidator = cpfValidator;
     }
 
     @Transactional
@@ -43,6 +43,8 @@ public class ClientService {
                 .name(request.getName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
+                .birthDate(request.getBirthDate())
+                .hasInsurance(request.getHasInsurance())
                 .build();
 
         client = clientRepository.save(client);
@@ -58,6 +60,8 @@ public class ClientService {
         if (request.getName() != null) client.setName(request.getName());
         if (request.getEmail() != null) client.setEmail(request.getEmail());
         if (request.getPhone() != null) client.setPhone(request.getPhone());
+        if (request.getBirthDate() != null) client.setBirthDate(request.getBirthDate());
+        if (request.getHasInsurance() != null) client.setHasInsurance(request.getHasInsurance());
 
         client = clientRepository.save(client);
         return toResponse(client);
@@ -105,6 +109,8 @@ public class ClientService {
                 client.getName(),
                 client.getEmail(),
                 client.getPhone(),
+                client.getBirthDate(),
+                client.getHasInsurance(),
                 client.getRegistrationDate()
         );
     }

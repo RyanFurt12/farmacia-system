@@ -1,9 +1,9 @@
-package br.com.farmacia.controller;
+package br.com.produtos.controller;
 
-import br.com.farmacia.model.Product;
-import br.com.farmacia.model.PurchaseIntention;
-import br.com.farmacia.service.ProductService;
-import br.com.farmacia.service.PurchaseIntentionService;
+import br.com.produtos.model.Product;
+import br.com.produtos.model.PurchaseIntention;
+import br.com.produtos.service.ProductService;
+import br.com.produtos.service.PurchaseIntentionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +32,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAll());
     }
 
+    @GetMapping("/stock")
+    public ResponseEntity<List<StockView>> stockReport() {
+        List<StockView> stock = productService.findAll().stream()
+                .map(p -> new StockView(p.getId(), p.getName(), p.getStock(), p.getControlled()))
+                .toList();
+        return ResponseEntity.ok(stock);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> findById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.findById(id));
@@ -43,5 +51,13 @@ public class ProductController {
             @RequestParam Integer quantity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(purchaseIntentionService.createIntention(id, quantity));
     }
-}
 
+    @PostMapping("/{id}/baixa")
+    public ResponseEntity<Product> baixarEstoque(
+            @PathVariable Long id,
+            @RequestParam Integer quantity) {
+        return ResponseEntity.ok(productService.decreaseStock(id, quantity));
+    }
+
+    public record StockView(Long id, String name, Integer stock, Boolean controlled) {}
+}

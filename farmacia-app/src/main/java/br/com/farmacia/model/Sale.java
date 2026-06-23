@@ -21,14 +21,26 @@ public class Sale {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "client_id", nullable = false)
+    @JoinColumn(name = "client_id", nullable = true)
     @JsonBackReference("client-sales")
     private Client client;
+
+    @Column(name = "invoice_cpf")
+    private String invoiceCpf;
 
     @Column(name = "sale_date")
     private LocalDateTime saleDate;
 
     private BigDecimal total;
+
+    @Column(name = "discount_percent")
+    private Integer discountPercent;
+
+    @Column(name = "discount_amount")
+    private BigDecimal discountAmount;
+
+    @Column(name = "final_total")
+    private BigDecimal finalTotal;
 
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference("sale-items")

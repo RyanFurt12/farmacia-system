@@ -1,7 +1,7 @@
-package br.com.farmacia.repository;
+package br.com.produtos.repository;
 
-import br.com.farmacia.model.PurchaseIntention;
-import br.com.farmacia.model.utils.PurchaseIntentionStatus;
+import br.com.produtos.model.PurchaseIntention;
+import br.com.produtos.model.PurchaseIntentionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package br.com.farmacia.model.utils;
+package br.com.produtos.model;
 
 public enum PurchaseIntentionStatus {
     PENDING,

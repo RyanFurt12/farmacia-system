@@ -1,96 +1,127 @@
 # Sistema de Farmácias — Monorepo
 
-Exemplo de sistema de farmácias com integração a sistemas legados, realizado para estudo em Desenvolvimento de componentes (BRADEPO) no IFSP.
+Sistema de farmácias em **microsserviços** (Spring Boot + MySQL), com integração a
+sistemas legados, feito para estudo em Desenvolvimento de Componentes (BRADEPO) no IFSP.
+
+Entrega em **duas versões**, selecionáveis por configuração e **reutilizando os mesmos
+componentes**:
+- **V1** — baixa de estoque por chamada **REST** síncrona entre serviços (`ESTOQUE_MODE=rest`, padrão);
+- **V2** — baixa de estoque por **mensageria (RabbitMQ)** (`ESTOQUE_MODE=messaging`).
 
 ## Estrutura
 
 ```
 farmacias-system/
-├── common-dtos/                ← DTOs compartilhados (Maven jar)
-├── cpf-validator/              ← Biblioteca de validação de CPF (Maven jar)
-├── farmacia-app/               ← Sistema principal (Spring Boot, porta 8080)
-├── fornecedor-a-service/       ← Fornecedor A — COBOL (porta 8083)
-├── fornecedor-b-service/       ← Fornecedor B — SOAP/Delphi (porta 8084)
-├── docker-compose.yml
+├── common-dtos/                ← DTOs/contratos compartilhados (jar): ProdutoDTO, EstoqueBaixaEvent, etc.
+├── cpf-validator/              ← Biblioteca de validação de CPF (jar)
+├── farmacia-app/               ← Interface unificada: clientes, vendas, NF, receita, relatórios (porta 8080)
+├── produtos-estoque-service/   ← Microsserviço de produtos, estoque e compras (porta 8082)
+├── fornecedor-a-service/       ← Fornecedor A — legado COBOL (porta 8083)
+├── fornecedor-b-service/       ← Fornecedor B — legado SOAP/Delphi (porta 8084)
+├── docker-compose.yml          ← MySQL + RabbitMQ + serviços
 └── README.md
 ```
 
-## Build e Execução
-Como é preciso realizar build dos componentes comum-dtos e cpf-validator, além de subir vários serviços, montei algumas imagens docker para facilitar a execução. No entanto, é possível executar os serviços localmente e manualmente se preferir.
+### Arquitetura
 
-### Docker Compose
+- `farmacia-app` é a **interface unificada**. Para vender, ele **lê** produtos do
+  `produtos-estoque-service` (`ProdutoClient`, sempre REST) e **dá baixa** no estoque
+  através do `EstoqueGateway` — cujo adapter muda entre V1 (REST) e V2 (RabbitMQ) sem
+  alterar a regra de negócio.
+- Não há FK entre serviços: `SaleItem` guarda um *snapshot* do produto e cada serviço
+  tem seu próprio banco (`farmaciadb` / `produtosdb`).
+- Integrações externas via ports/adapters: **SEFAZ** (NF-e), **ANS** (receitas
+  controladas) e **Fornecedores A/B**.
+
+### Regras de negócio principais
+
+- Cadastro de **medicamentos** e **produtos de higiene** (xampu, creme facial, …).
+- Dados do cliente são coletados/cadastrados **somente** em medicamentos controlados.
+- Cliente pode pedir **NF com CPF sem ser cadastrado** (vai só na nota).
+- **Bonificação**: desconto progressivo por nº de compras do cliente cadastrado +
+  bônus de convênio para idoso com plano de saúde.
+- Emissão de **NF-e (SEFAZ)** em toda venda; envio de **receita à ANS** em controlados.
+- **Relatórios**: vendas por período, mais vendidos e controle de estoque.
+
+## Build e Execução
+
+### Docker Compose (recomendado)
+
 ```bash
+# V1 (REST) — padrão
 docker-compose up --build
+
+# V2 (mensageria RabbitMQ)
+ESTOQUE_MODE=messaging docker-compose up --build
 ```
 
+Sobe MySQL, RabbitMQ (painel em http://localhost:15672, guest/guest) e todos os serviços.
+
 ### Execução local
+
 ```bash
 mvn install -f common-dtos/pom.xml
 mvn install -f cpf-validator/pom.xml
 
+# infra mínima
+docker compose up -d mysql rabbitmq
+
+# em terminais separados (defina ESTOQUE_MODE=messaging para a V2)
 cd fornecedor-a-service && mvn spring-boot:run
-
 cd fornecedor-b-service && mvn spring-boot:run
-
+cd produtos-estoque-service && mvn spring-boot:run
 cd farmacia-app && mvn spring-boot:run
 ```
 
 ## API Endpoints
 
-### Clientes — `/api/clients`
-| Método | Endpoint | Descrição |
-|--------|----------|-------------|
-| POST | `/api/clients` | Registrar Cliente |
-| PUT | `/api/clients/cpf/{cpf}` | Atualizar dados de cliente |
-| GET | `/api/clients` | Listar Clientes |
-| GET | `/api/clients/{id}` | Buscar Cliente por ID |
-| GET | `/api/clients/cpf/{cpf}` | Buscar Cliente por CPF |
+### farmacia-app (8080)
 
-### Produtos — `/api/products`
+**Clientes — `/api/clients`**
 | Método | Endpoint | Descrição |
-|--------|----------|-------------|
-| POST | `/api/products` | Registrar Produto |
-| GET | `/api/products` | Listar Produtos |
-| GET | `/api/products/{id}` | Buscar Produto por ID |
-| POST | `/api/products/{id}/order?quantity=5` | Repor Estoque de um Produto |
+|--------|----------|-----------|
+| POST | `/api/clients` | Registrar cliente (cpf, name, email, phone, birthDate, hasInsurance) |
+| PUT | `/api/clients/cpf/{cpf}` | Atualizar cliente |
+| GET | `/api/clients` · `/api/clients/{id}` · `/api/clients/cpf/{cpf}` | Consultas |
 
-### Vendas — `/api/sales`
+**Vendas — `/api/sales`**
 | Método | Endpoint | Descrição |
-|--------|----------|-------------|
-| POST | `/api/sales` | Registrar Venda |
-| GET | `/api/sales` | Listar Vendas |
-| GET | `/api/sales/{id}` | Buscar Venda por ID |
+|--------|----------|-----------|
+| POST | `/api/sales` | Registrar venda |
+| GET | `/api/sales` · `/api/sales/{id}` | Consultas |
+
+**Relatórios — `/api/reports`**
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/reports/sales?start=&end=` | Vendas por período (ISO date-time) |
+| GET | `/api/reports/top-products` | Produtos mais vendidos |
+
+### produtos-estoque-service (8082)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST/GET | `/api/products` | Registrar / listar produtos |
+| GET | `/api/products/{id}` | Buscar produto |
+| GET | `/api/products/stock` | Relatório de estoque |
+| POST | `/api/products/{id}/order?quantity=` | Reposição (cria intenção de compra) |
+| POST | `/api/products/{id}/baixa?quantity=` | Baixa de estoque (usado na V1) |
+| ... | `/api/purchase-intentions/...` | Aprovar/reprovar/compra em lote |
 
 ## Exemplos de uso
 
-### Registrar e Atualizar Cliente
 ```bash
-# Register
-curl -X POST http://localhost:8080/api/clients \
-  -H "Content-Type: application/json" \
-  -d '{"cpf": "52998224725", "name": "Teste Silva", "email": "teste@email.com"}'
+# Venda não controlada SEM CPF (anônima)
+curl -X POST http://localhost:8080/api/sales -H "Content-Type: application/json" \
+  -d '{"items":[{"productId":1,"quantity":2}]}'
 
-# Update
-curl -X PUT http://localhost:8080/api/clients/cpf/52998224725 \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Teste Update", "email": "teste.update@email.com"}'
-```
+# NF com CPF (cliente não é cadastrado)
+curl -X POST http://localhost:8080/api/sales -H "Content-Type: application/json" \
+  -d '{"cpf":"16899535009","items":[{"productId":3,"quantity":1}]}'
 
-### Registrar Venda
-```bash
-curl -X POST http://localhost:8080/api/sales \
-  -H "Content-Type: application/json" \
-  -d '{
-    "cpf": "52998224725",
-    "items": [
-      {"productId": 1, "quantity": 2},
-      {"productId": 2, "quantity": 1}
-    ],
-    "prescriptionId": "REC-12345"
-  }'
-```
+# Venda de medicamento controlado (exige CPF) + receita
+curl -X POST http://localhost:8080/api/sales -H "Content-Type: application/json" \
+  -d '{"cpf":"52998224725","items":[{"productId":2,"quantity":1}],"prescriptionId":"REC-12345"}'
 
-### Repor Estoque de produto
-```bash
-curl -X POST "http://localhost:8080/api/products/1/order?quantity=10"
+# Relatório de vendas por período
+curl "http://localhost:8080/api/reports/sales?start=2020-01-01T00:00:00&end=2030-01-01T00:00:00"
 ```

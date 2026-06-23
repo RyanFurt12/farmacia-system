@@ -25,6 +25,12 @@ public class Client {
     private String email;
     private String phone;
 
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    @Column(name = "has_insurance")
+    private Boolean hasInsurance;
+
     @Column(name = "registration_date")
     private LocalDate registrationDate;
 

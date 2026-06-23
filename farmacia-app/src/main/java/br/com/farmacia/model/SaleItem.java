@@ -21,9 +21,11 @@ public class SaleItem {
     @JsonBackReference("sale-items")
     private Sale sale;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
+    @Column(name = "product_name")
+    private String productName;
 
     private Integer quantity;
 
